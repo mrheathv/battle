@@ -10,7 +10,7 @@ export async function onRequestGet(context) {
       models: {
         openai: env.OPENAI_MODEL || 'gpt-4o',
         claude: env.CLAUDE_MODEL || 'claude-opus-4-6',
-        gemini: env.GEMINI_MODEL || 'gemini-1.5-pro',
+        gemini: env.GEMINI_MODEL || 'gemini-2.0-flash',
       },
     }),
     { headers: { 'Content-Type': 'application/json' } },

@@ -98,7 +98,7 @@ async function getClaudeResponse(topic, conversation, env) {
 // ── Gemini (direct REST) ───────────────────────────────────────────────────────
 
 async function getGeminiResponse(topic, conversation, env) {
-  const model = env.GEMINI_MODEL || 'gemini-1.5-pro';
+  const model = env.GEMINI_MODEL || 'gemini-2.0-flash';
   const apiKey = env.GEMINI_API_KEY;
   const isInitial = conversation.length === 0;
   const history = formatHistory(conversation);

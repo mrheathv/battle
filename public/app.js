@@ -143,7 +143,13 @@ function endSession(reason) {
   document.getElementById('stat-total').textContent = responseCount;
   document.getElementById('stat-rounds').textContent = roundNumber;
 
-  setTimeout(() => showScreen('screen-end'), 1600);
+  setTimeout(() => {
+    showScreen('screen-end');
+    // Repurpose the End Session button as a back-to-summary link
+    const endBtn = document.getElementById('end-btn');
+    endBtn.textContent = '← Summary';
+    endBtn.onclick = () => showScreen('screen-end');
+  }, 1600);
 }
 
 // ── Fetch One Round ──
@@ -288,7 +294,19 @@ document.getElementById('end-btn').addEventListener('click', () => {
   endSession('manual');
 });
 
+document.getElementById('review-btn').addEventListener('click', () => {
+  showScreen('screen-battle');
+  // Scroll chat to bottom so the end divider is visible
+  const feed = document.getElementById('chat-feed');
+  feed.scrollTop = feed.scrollHeight;
+});
+
 document.getElementById('restart-btn').addEventListener('click', () => {
+  // Reset the End Session button back to its original state
+  const endBtn = document.getElementById('end-btn');
+  endBtn.textContent = 'End Session';
+  endBtn.onclick = null;
+
   document.getElementById('topic-input').value = '';
   showScreen('screen-landing');
   checkApiStatus();
