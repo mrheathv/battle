@@ -1,6 +1,6 @@
 /* ── AI Battle: Frontend Logic ── */
 
-const MAX_RESPONSES = 20;
+const MAX_RESPONSES = 21;
 const BETWEEN_ROUND_DELAY = 2500; // ms between auto-advancing to next round
 const MESSAGE_DELAY = 600;        // ms between messages appearing in same round
 
