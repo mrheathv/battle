@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Battle: Who Knows More?</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- ── Landing Screen ── -->
+    <div id="screen-landing" class="screen active">
+      <div class="landing-wrap">
+        <div class="landing-glow"></div>
+
+        <header class="landing-header">
+          <div class="title-badge">AI BATTLE</div>
+          <h1 class="landing-title">Who knows more about&hellip;</h1>
+          <p class="landing-sub">
+            Pit GPT-4, Claude &amp; Gemini against each other and watch the sparks fly.
+          </p>
+        </header>
+
+        <div class="combatants">
+          <div class="combatant gpt">
+            <div class="combatant-logo gpt-logo">GPT</div>
+            <span>GPT-4</span>
+          </div>
+          <div class="vs-badge">VS</div>
+          <div class="combatant claude">
+            <div class="combatant-logo claude-logo">CL</div>
+            <span>Claude</span>
+          </div>
+          <div class="vs-badge">VS</div>
+          <div class="combatant gemini">
+            <div class="combatant-logo gemini-logo">GEM</div>
+            <span>Gemini</span>
+          </div>
+        </div>
+
+        <div class="topic-form">
+          <div class="input-wrap">
+            <span class="input-prefix">Who knows more about&hellip;</span>
+            <input
+              id="topic-input"
+              type="text"
+              placeholder="black holes, Renaissance art, sourdough bread…"
+              maxlength="150"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+          <button id="start-btn" class="btn btn-start">
+            <span>Start the Battle</span>
+            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div id="api-warning" class="api-warning hidden">
+          <span>⚠️</span>
+          <span id="api-warning-text"></span>
+        </div>
+
+        <p class="landing-footnote">
+          Each AI will argue its case &mdash; then read each other's responses and fire back.
+          Session auto-ends after 20 responses.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Battle Screen ── -->
+    <div id="screen-battle" class="screen">
+      <div class="battle-layout">
+        <!-- Sticky header -->
+        <div class="battle-topbar">
+          <div class="battle-topic">
+            <span class="battle-topic-label">Debating:</span>
+            <span id="battle-topic-text" class="battle-topic-value"></span>
+          </div>
+          <div class="battle-controls">
+            <div class="progress-pill">
+              <div id="progress-bar" class="progress-fill"></div>
+              <span id="progress-text" class="progress-label">0 / 20</span>
+            </div>
+            <button id="end-btn" class="btn btn-end">End Session</button>
+          </div>
+        </div>
+
+        <!-- Chat feed -->
+        <div id="chat-feed" class="chat-feed">
+          <!-- Messages injected here -->
+        </div>
+
+        <!-- Status bar -->
+        <div id="status-bar" class="status-bar hidden">
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+          <span id="status-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── End Screen ── -->
+    <div id="screen-end" class="screen">
+      <div class="end-wrap">
+        <div class="end-trophy">🏆</div>
+        <h2 class="end-title">Battle Over!</h2>
+        <p id="end-message" class="end-message"></p>
+        <div class="end-stats">
+          <div class="stat">
+            <span id="stat-total" class="stat-number">0</span>
+            <span class="stat-label">Total Responses</span>
+          </div>
+          <div class="stat">
+            <span id="stat-rounds" class="stat-number">0</span>
+            <span class="stat-label">Rounds</span>
+          </div>
+        </div>
+        <button id="restart-btn" class="btn btn-start">New Battle</button>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
