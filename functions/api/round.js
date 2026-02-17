@@ -63,7 +63,7 @@ async function getOpenAIResponse(topic, conversation, env) {
 // ── Anthropic ─────────────────────────────────────────────────────────────────
 
 async function getClaudeResponse(topic, conversation, env) {
-  const model = env.CLAUDE_MODEL || 'claude-opus-4-5';
+  const model = env.CLAUDE_MODEL || 'claude-opus-4-6';
   const isInitial = conversation.length === 0;
   const history = formatHistory(conversation);
 
@@ -170,30 +170,55 @@ export async function onRequestPost(context) {
     );
   }
 
-  try {
-    const [openaiContent, claudeContent, geminiContent] = await Promise.all([
-      getOpenAIResponse(cleanTopic, cleanConversation, env),
-      getClaudeResponse(cleanTopic, cleanConversation, env),
-      getGeminiResponse(cleanTopic, cleanConversation, env),
-    ]);
+  const [openaiResult, claudeResult, geminiResult] = await Promise.allSettled([
+    getOpenAIResponse(cleanTopic, cleanConversation, env),
+    getClaudeResponse(cleanTopic, cleanConversation, env),
+    getGeminiResponse(cleanTopic, cleanConversation, env),
+  ]);
 
-    return jsonResponse({
-      responses: [
-        { ai: 'openai', content: openaiContent },
-        { ai: 'claude', content: claudeContent },
-        { ai: 'gemini', content: geminiContent },
-      ],
-    });
-  } catch (error) {
-    let userMessage = 'Failed to get AI responses';
-    if (error.status === 401 || error.message?.includes('API key')) {
-      userMessage = 'Invalid API key. Check your Cloudflare secrets.';
-    } else if (error.status === 429) {
-      userMessage = 'Rate limit exceeded. Please wait a moment and try again.';
-    } else if (error.status === 402) {
-      userMessage = 'API quota exceeded. Check your billing settings.';
-    }
-
-    return jsonResponse({ error: userMessage, details: error.message }, 500);
+  // If all three failed, return an error
+  if (
+    openaiResult.status === 'rejected' &&
+    claudeResult.status === 'rejected' &&
+    geminiResult.status === 'rejected'
+  ) {
+    return jsonResponse(
+      {
+        error: 'All AI APIs failed',
+        details: [
+          `OpenAI: ${openaiResult.reason?.message}`,
+          `Claude: ${claudeResult.reason?.message}`,
+          `Gemini: ${geminiResult.reason?.message}`,
+        ].join(' | '),
+      },
+      500,
+    );
   }
+
+  // Build responses, substituting an error note for any that failed
+  const responses = [
+    {
+      ai: 'openai',
+      content:
+        openaiResult.status === 'fulfilled'
+          ? openaiResult.value
+          : `[OpenAI error: ${openaiResult.reason?.message}]`,
+    },
+    {
+      ai: 'claude',
+      content:
+        claudeResult.status === 'fulfilled'
+          ? claudeResult.value
+          : `[Claude error: ${claudeResult.reason?.message}]`,
+    },
+    {
+      ai: 'gemini',
+      content:
+        geminiResult.status === 'fulfilled'
+          ? geminiResult.value
+          : `[Gemini error: ${geminiResult.reason?.message}]`,
+    },
+  ];
+
+  return jsonResponse({ responses });
 }

@@ -9,7 +9,7 @@ export async function onRequestGet(context) {
       gemini: !!env.GEMINI_API_KEY,
       models: {
         openai: env.OPENAI_MODEL || 'gpt-4o',
-        claude: env.CLAUDE_MODEL || 'claude-opus-4-5',
+        claude: env.CLAUDE_MODEL || 'claude-opus-4-6',
         gemini: env.GEMINI_MODEL || 'gemini-1.5-pro',
       },
     }),
