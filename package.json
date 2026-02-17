@@ -6,10 +6,7 @@
     "dev": "wrangler pages dev",
     "deploy": "wrangler pages deploy"
   },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
-    "openai": "^4.86.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "wrangler": "^4.0.0"
   }
