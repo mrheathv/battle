@@ -122,6 +122,23 @@
             <span class="stat-label">Rounds</span>
           </div>
         </div>
+        <!-- Verdict / TLDR section -->
+        <div id="end-verdict" class="end-verdict hidden">
+          <div class="verdict-header">
+            <span class="verdict-label">The Judges' Verdicts</span>
+            <span class="verdict-sub">each AI weighs in — with obvious bias</span>
+          </div>
+          <div id="verdict-cards" class="verdict-cards">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+        <div id="verdict-loading" class="verdict-loading hidden">
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+          <span>Consulting the judges…</span>
+        </div>
+
         <div class="end-actions">
           <button id="review-btn" class="btn btn-review">Review Chat</button>
           <button id="restart-btn" class="btn btn-start">New Battle</button>

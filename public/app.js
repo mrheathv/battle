@@ -115,6 +115,49 @@ function showErrorCard(message) {
   delay(30).then(() => card.classList.add('visible'));
 }
 
+// ── Fetch Summary / Verdict ──
+async function fetchAndShowSummary() {
+  const loading = document.getElementById('verdict-loading');
+  const verdictSection = document.getElementById('end-verdict');
+  const cardsEl = document.getElementById('verdict-cards');
+
+  loading.classList.remove('hidden');
+
+  let data;
+  try {
+    const res = await fetch('/api/summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic, conversation }),
+    });
+    data = await res.json();
+  } catch {
+    loading.classList.add('hidden');
+    return;
+  }
+
+  loading.classList.add('hidden');
+
+  if (!data.summaries) return;
+
+  cardsEl.innerHTML = '';
+  for (const { ai, content } of data.summaries) {
+    const cfg = AI_CONFIG[ai];
+    const card = document.createElement('div');
+    card.className = 'verdict-card';
+    card.innerHTML = `
+      <div class="verdict-avatar" style="background:${cfg.color}">${cfg.short}</div>
+      <div class="verdict-text">${escapeHtml(content)}</div>
+    `;
+    cardsEl.appendChild(card);
+    // stagger entrance
+    await delay(120);
+    card.classList.add('visible');
+  }
+
+  verdictSection.classList.remove('hidden');
+}
+
 // ── Session End ──
 function endSession(reason) {
   if (sessionEnded) return;
@@ -142,6 +185,9 @@ function endSession(reason) {
 
   document.getElementById('stat-total').textContent = responseCount;
   document.getElementById('stat-rounds').textContent = roundNumber;
+
+  // Start fetching summaries immediately (runs in parallel with the delay)
+  fetchAndShowSummary();
 
   setTimeout(() => {
     showScreen('screen-end');
@@ -306,6 +352,11 @@ document.getElementById('restart-btn').addEventListener('click', () => {
   const endBtn = document.getElementById('end-btn');
   endBtn.textContent = 'End Session';
   endBtn.onclick = null;
+
+  // Clear verdict section for next battle
+  document.getElementById('end-verdict').classList.add('hidden');
+  document.getElementById('verdict-loading').classList.add('hidden');
+  document.getElementById('verdict-cards').innerHTML = '';
 
   document.getElementById('topic-input').value = '';
   showScreen('screen-landing');
