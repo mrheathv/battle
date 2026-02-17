@@ -240,7 +240,7 @@ async function checkApiStatus() {
     if (missing.length > 0) {
       const warning = document.getElementById('api-warning');
       const warningText = document.getElementById('api-warning-text');
-      warningText.textContent = `Missing API keys: ${missing.join(', ')}. Configure your .env file before starting.`;
+      warningText.textContent = `Missing API keys: ${missing.join(', ')}. Add them as secrets in your Cloudflare Pages project settings.`;
       warning.classList.remove('hidden');
     }
   } catch {
