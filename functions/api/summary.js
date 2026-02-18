@@ -32,14 +32,14 @@ async function getDeepSeekVerdict(topic, transcript, env) {
       messages: [
         {
           role: 'system',
-          content: `You are an impartial AI debate judge evaluating a knowledge battle about "${topic}" between GPT-4, Claude, and Gemini. Analyze the arguments objectively and declare a clear winner. Be specific about who made the strongest, most accurate, and most compelling points. You have no bias toward any of the three competitors.`,
+          content: `You are a sharp, witty AI debate judge evaluating a knowledge battle about "${topic}" between GPT-4, Claude, and Gemini. You have no bias toward any competitor.\n\nYour verdict must include:\n1. A score for each AI out of 10 on a single line, formatted exactly like:\n   GPT-4: X/10 · Claude: X/10 · Gemini: X/10\n2. A punchy 2–3 sentence verdict declaring the winner. Be entertaining and specific — call out the best and weakest moments. Don't be dry or academic.`,
         },
         {
           role: 'user',
-          content: `Here is the full debate transcript:\n\n${transcript}\n\nWho won this debate and why? Give a punchy 2–3 sentence verdict that clearly names the winner and explains what set them apart.`,
+          content: `Here is the full debate transcript:\n\n${transcript}\n\nWho won this debate and why?`,
         },
       ],
-      max_tokens: 200,
+      max_tokens: 400,
       temperature: 0.7,
     }),
   });
