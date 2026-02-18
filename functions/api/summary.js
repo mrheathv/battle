@@ -1,4 +1,4 @@
-// POST /api/summary — asks each AI for a TLDR verdict on who won the debate
+// POST /api/summary — asks DeepSeek to act as an impartial judge and declare a winner
 // Uses direct REST API calls (no npm SDKs) for Cloudflare Workers compatibility.
 
 function jsonResponse(data, status = 200) {
@@ -18,117 +18,39 @@ function formatTranscript(conversation) {
     .join('\n\n');
 }
 
-// ── OpenAI ────────────────────────────────────────────────────────────────────
+// ── DeepSeek ──────────────────────────────────────────────────────────────────
 
-async function getOpenAISummary(topic, transcript, env) {
-  const model = env.OPENAI_MODEL || 'gpt-4o';
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+async function getDeepSeekVerdict(topic, transcript, env) {
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
     },
     body: JSON.stringify({
-      model,
+      model: 'deepseek-chat',
       messages: [
         {
           role: 'system',
-          content: `You are a witty debate judge summarizing an AI knowledge battle about "${topic}". You have a slight but transparent bias toward GPT-4. Give a punchy 2-sentence TLDR of the debate and declare a winner. Be entertaining and specific about who made the best points.`,
+          content: `You are an impartial AI debate judge evaluating a knowledge battle about "${topic}" between GPT-4, Claude, and Gemini. Analyze the arguments objectively and declare a clear winner. Be specific about who made the strongest, most accurate, and most compelling points. You have no bias toward any of the three competitors.`,
         },
         {
           role: 'user',
-          content: `Here is the full debate transcript:\n\n${transcript}\n\nGive your TLDR verdict: who argued best and who wins?`,
+          content: `Here is the full debate transcript:\n\n${transcript}\n\nWho won this debate and why? Give a punchy 2–3 sentence verdict that clearly names the winner and explains what set them apart.`,
         },
       ],
-      max_tokens: 120,
-      temperature: 0.85,
+      max_tokens: 200,
+      temperature: 0.7,
     }),
   });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`OpenAI API error ${res.status}: ${err}`);
+    throw new Error(`DeepSeek API error ${res.status}: ${err}`);
   }
 
   const data = await res.json();
   return data.choices[0].message.content.trim();
-}
-
-// ── Anthropic ─────────────────────────────────────────────────────────────────
-
-async function getClaudeSummary(topic, transcript, env) {
-  const model = env.CLAUDE_MODEL || 'claude-opus-4-6';
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 120,
-      system: `You are a witty debate judge summarizing an AI knowledge battle about "${topic}". You have a slight but transparent bias toward Claude. Give a punchy 2-sentence TLDR of the debate and declare a winner. Be entertaining and specific about who made the best points.`,
-      messages: [
-        {
-          role: 'user',
-          content: `Here is the full debate transcript:\n\n${transcript}\n\nGive your TLDR verdict: who argued best and who wins?`,
-        },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Anthropic API error ${res.status}: ${err}`);
-  }
-
-  const data = await res.json();
-  return data.content[0].text.trim();
-}
-
-// ── Gemini ────────────────────────────────────────────────────────────────────
-
-async function getGeminiSummary(topic, transcript, env) {
-  const model = env.GEMINI_MODEL || 'gemini-2.0-flash';
-  const apiKey = env.GEMINI_API_KEY;
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system_instruction: {
-        parts: [
-          {
-            text: `You are a witty debate judge summarizing an AI knowledge battle about "${topic}". You have a slight but transparent bias toward Gemini. Give a punchy 2-sentence TLDR of the debate and declare a winner. Be entertaining and specific about who made the best points.`,
-          },
-        ],
-      },
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              text: `Here is the full debate transcript:\n\n${transcript}\n\nGive your TLDR verdict: who argued best and who wins?`,
-            },
-          ],
-        },
-      ],
-      generationConfig: { maxOutputTokens: 120, temperature: 0.85 },
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${err}`);
-  }
-
-  const data = await res.json();
-  return data.candidates[0].content.parts[0].text.trim();
 }
 
 // ── Route Handler ─────────────────────────────────────────────────────────────
@@ -156,35 +78,12 @@ export async function onRequestPost(context) {
   const cleanTopic = topic.trim().slice(0, 200);
   const transcript = formatTranscript(conversation);
 
-  const [openaiResult, claudeResult, geminiResult] = await Promise.allSettled([
-    getOpenAISummary(cleanTopic, transcript, env),
-    getClaudeSummary(cleanTopic, transcript, env),
-    getGeminiSummary(cleanTopic, transcript, env),
-  ]);
+  let verdict;
+  try {
+    verdict = await getDeepSeekVerdict(cleanTopic, transcript, env);
+  } catch {
+    verdict = '[DeepSeek was unavailable to render a verdict]';
+  }
 
-  const summaries = [
-    {
-      ai: 'openai',
-      content:
-        openaiResult.status === 'fulfilled'
-          ? openaiResult.value
-          : `[Could not reach GPT-4 for a verdict]`,
-    },
-    {
-      ai: 'claude',
-      content:
-        claudeResult.status === 'fulfilled'
-          ? claudeResult.value
-          : `[Could not reach Claude for a verdict]`,
-    },
-    {
-      ai: 'gemini',
-      content:
-        geminiResult.status === 'fulfilled'
-          ? geminiResult.value
-          : `[Could not reach Gemini for a verdict]`,
-    },
-  ];
-
-  return jsonResponse({ summaries });
+  return jsonResponse({ summaries: [{ ai: 'deepseek', content: verdict }] });
 }

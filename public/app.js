@@ -20,6 +20,11 @@ const AI_CONFIG = {
     short: 'GEM',
     color: '#4285f4',
   },
+  deepseek: {
+    name: 'DeepSeek',
+    short: 'DS',
+    color: '#5e5ce6',
+  },
 };
 
 // ── State ──
