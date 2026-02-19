@@ -29,10 +29,17 @@ async function getDeepSeekVerdict(topic, transcript, env) {
     },
     body: JSON.stringify({
       model: 'deepseek-chat',
+      response_format: { type: 'json_object' },
       messages: [
         {
           role: 'system',
-          content: `You are a sharp, witty AI debate judge evaluating a knowledge battle about "${topic}" between GPT-4, Claude, and Gemini. You have no bias toward any competitor.\n\nYour verdict must include:\n1. A score for each AI out of 10 on a single line, formatted exactly like:\n   GPT-4: X/10 · Claude: X/10 · Gemini: X/10\n2. A punchy 2–3 sentence verdict declaring the winner. Be entertaining and specific — call out the best and weakest moments. Don't be dry or academic.`,
+          content: `You are a sharp, witty AI debate judge scoring a knowledge battle about "${topic}" between GPT-4, Claude, and Gemini. You have zero bias toward any competitor.
+
+Respond with ONLY valid JSON in this exact shape:
+{
+  "scores": { "openai": <integer 1-10>, "claude": <integer 1-10>, "gemini": <integer 1-10> },
+  "verdict": "<2-3 punchy sentences declaring the winner. Be entertaining and specific — call out the best and worst moments. No dry academic language.>"
+}`,
         },
         {
           role: 'user',
@@ -50,7 +57,8 @@ async function getDeepSeekVerdict(topic, transcript, env) {
   }
 
   const data = await res.json();
-  return data.choices[0].message.content.trim();
+  const parsed = JSON.parse(data.choices[0].message.content);
+  return { scores: parsed.scores, verdict: parsed.verdict };
 }
 
 // ── Route Handler ─────────────────────────────────────────────────────────────
@@ -78,12 +86,15 @@ export async function onRequestPost(context) {
   const cleanTopic = topic.trim().slice(0, 200);
   const transcript = formatTranscript(conversation);
 
-  let verdict;
+  let content = '[DeepSeek was unavailable to render a verdict]';
+  let scores = null;
   try {
-    verdict = await getDeepSeekVerdict(cleanTopic, transcript, env);
+    const result = await getDeepSeekVerdict(cleanTopic, transcript, env);
+    content = result.verdict;
+    scores = result.scores;
   } catch {
-    verdict = '[DeepSeek was unavailable to render a verdict]';
+    // fall through to defaults above
   }
 
-  return jsonResponse({ summaries: [{ ai: 'deepseek', content: verdict }] });
+  return jsonResponse({ summaries: [{ ai: 'deepseek', content, scores }] });
 }

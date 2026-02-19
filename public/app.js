@@ -1,7 +1,7 @@
 /* ── AI Battle: Frontend Logic ── */
 
 const MAX_RESPONSES = 21;
-const BETWEEN_ROUND_DELAY = 2500; // ms between auto-advancing to next round
+const BETWEEN_ROUND_DELAY = 6000; // ms between auto-advancing to next round
 const MESSAGE_DELAY = 600;        // ms between messages appearing in same round
 
 const AI_CONFIG = {
@@ -258,13 +258,31 @@ async function fetchAndShowSummary() {
   if (!data.summaries) return;
 
   cardsEl.innerHTML = '';
-  for (const { ai, content } of data.summaries) {
+  for (const { ai, content, scores } of data.summaries) {
     const cfg = AI_CONFIG[ai];
     const card = document.createElement('div');
     card.className = 'verdict-card';
+
+    let scoreBarsHtml = '';
+    if (scores) {
+      const rows = [
+        { key: 'openai', ...AI_CONFIG.openai },
+        { key: 'claude', ...AI_CONFIG.claude },
+        { key: 'gemini', ...AI_CONFIG.gemini },
+      ].map(({ key, name, color }) => {
+        const score = scores[key] ?? 0;
+        return `<div class="score-row">
+          <span class="score-label">${escapeHtml(name)}</span>
+          <div class="score-track"><div class="score-fill" style="width:${score * 10}%;background:${color}"></div></div>
+          <span class="score-num">${score}/10</span>
+        </div>`;
+      }).join('');
+      scoreBarsHtml = `<div class="score-bars">${rows}</div>`;
+    }
+
     card.innerHTML = `
       <div class="verdict-avatar" style="background:${cfg.color}">${cfg.short}</div>
-      <div class="verdict-text">${escapeHtml(content)}</div>
+      <div class="verdict-body">${scoreBarsHtml}<div class="verdict-text">${escapeHtml(content)}</div></div>
     `;
     cardsEl.appendChild(card);
     // stagger entrance

@@ -46,7 +46,7 @@ async function getOpenAIResponse(topic, conversation, env) {
         },
         { role: 'user', content: userPrompt },
       ],
-      max_tokens: 250,
+      max_tokens: 150,
       temperature: 0.9,
     }),
   });
@@ -80,7 +80,7 @@ async function getClaudeResponse(topic, conversation, env) {
     },
     body: JSON.stringify({
       model,
-      max_tokens: 250,
+      max_tokens: 150,
       system: `You are Claude by Anthropic, participating in a fun, spirited debate about which AI knows the most about "${topic}". Your rivals are GPT-4 (OpenAI) and Gemini (Google). Be confident, articulate, and entertainingly competitive. Reference your training approach, Constitutional AI, and Anthropic's research. Keep it short and punchy (2-3 sentences max).`,
       messages: [{ role: 'user', content: userPrompt }],
     }),
@@ -120,7 +120,7 @@ async function getGeminiResponse(topic, conversation, env) {
       },
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
       generationConfig: {
-        maxOutputTokens: 250,
+        maxOutputTokens: 150,
         temperature: 0.9,
       },
     }),
